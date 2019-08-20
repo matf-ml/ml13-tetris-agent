@@ -11,9 +11,6 @@ Uskoro
 
 FCEUX - http://www.fceux.com/web/download.html
 
-```
-Give examples
-```
 
 
 ## Authors
