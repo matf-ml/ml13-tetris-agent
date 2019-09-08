@@ -4,8 +4,8 @@ from time import sleep
 
 
 
-
-weights =  [0,0,0,0,0,0,0,0]
+#weights =  [0,0,0,0,0,0,0,0]
+weights =  [-1.279500 , -1.278800 ,-1.302500, -89.271100 ,-0.494500, -0.131500, -0.496600, -5.745800]
 gamma = 0.95
 alpha = 0.000001
 explore_change=0.00
@@ -15,8 +15,12 @@ explore_change=0.00
 br_igara = 0
 conn = None
 lines_cleared=0
-MAX_GAMES = 10
+MAX_GAMES = 20
 
+training=False
+avg= False
+play= True
+deep = False
 
 
 terminos = {"T" : [[[0,1,0],[1,1,1]],[[1,0],[1,1],[1,0]],[[1 ,1, 1],[0,1,0]],[[0,1],[1,1],[0,1]]],
@@ -258,6 +262,8 @@ def simulate_board(board,pice, move):
 	term_matrix = terminos[pice][move[0]]
 	t_len = len(terminos[pice][move[0]][0])
 	pocetna = max_hight_from_top(board2,move[1])
+	if(pice == "Z" or pice == "S"):
+		pocetna-=1
 	for i in range(1,t_len):
 		tmp=max_hight_from_top(board2,move[1]+i)
 		if(tmp<pocetna):
@@ -340,7 +346,10 @@ def playgame():
             #print(tetris_piece_id,tetris_piece_id2)
             #tetris_piece="L"
             #print(tetris_piece)
-            next_board,move = find_best_move(board,tetris_piece)
+            if(not deep):
+                next_board,move = find_best_move(board,tetris_piece)
+            else:
+                next_board,move = find_best_move_deep(board,tetris_piece,tetris_piece2)			
             #print(move)
             #print_board(next_board)
 
@@ -364,7 +373,10 @@ def playgame_after_training():
             tetris_piece_id2= dataList[-2]
             tetris_piece=get_piece(tetris_piece_id)
             tetris_piece2=get_piece(tetris_piece_id2)			
-            next_board,move = find_best_move(board,tetris_piece)
+            if(not deep):
+                next_board,move = find_best_move(board,tetris_piece)
+            else:
+                next_board,move = find_best_move_deep(board,tetris_piece,tetris_piece2)
             global lines_cleared
             rem = removed_lines(next_board)
             lines_cleared+=rem
@@ -375,6 +387,24 @@ def playgame_after_training():
             return True
 
 
+def remove_full_lines(board):
+	preskoceno=0
+	new_board = [ [ 0 for i in range(21) ] for j in range(21) ]
+	for i in range(0,20):
+		for j in range(0,10):
+			new_board[i][j]==0
+			
+	if(board):		
+		for i in reversed(range(0,20)):
+			if(tbc(board,i)==True):
+				preskoceno+=1
+			else:
+				for j in range(0,10):
+					if(board[i][j]==1):
+						new_board[i+preskoceno][j]=1
+	return new_board
+			
+
 
 def find_best_move_deep(board,tetris_piece,next_piece):
     lista_bordova=[]
@@ -384,12 +414,12 @@ def find_best_move_deep(board,tetris_piece,next_piece):
         br_polozaja=terminos_move[tetris_piece][i][1]-terminos_move[tetris_piece][i][0]+1
         for j in range(0,br_polozaja):
             tmp = simulate_board(board,tetris_piece,(i,j))
-			#tmp = remove_full_lines(tmp)
+            tmp = remove_full_lines(tmp)
             if(tmp is not None):    
                 for i2 in range(0,terminos_rotate[next_piece]):
-                    br_polozaja2=terminos_move[next_piece][i][1]-terminos_move[next_piece][i][0]+1
+                    br_polozaja2=terminos_move[next_piece][i2][1]-terminos_move[next_piece][i2][0]+1
                     for j2 in range(0,br_polozaja2):
-                        tmp2 = simulate_board(board,tetris_piece,(i2,j2))
+                        tmp2 = simulate_board(tmp,next_piece,(i2,j2))
                         if(tmp2 is not None):
 							#print_board(tmp)
 							#print(i,j)
@@ -417,25 +447,30 @@ def find_best_move_deep(board,tetris_piece,next_piece):
 
 	
 if __name__=="__main__":
-    waitForConnection()
-    for i in range(0,MAX_GAMES):
-        br_igara+=1
-        lines_cleared=0
-        while(True):
-            if(playgame()):
-	            break;
-        print("Game player %d lines cleared %d" %(br_igara,lines_cleared))   
+	waitForConnection()
+	if(training):
+		for i in range(0,MAX_GAMES):
+			br_igara+=1
+			lines_cleared=0
+			while(True):
+				if(playgame()):
+					break;
+		print("Game player %d lines cleared %d" %(br_igara,lines_cleared))   
         
 		
-    f= open("weights.txt","a")
-    f.write("[%f , %f ,%f, %f ,%f, %f, %f, %f]\n" %( weights[0] ,weights[1],weights[2], weights[3],weights[4] ,weights[5],weights[6], weights[7]))
-    f.close()
+		f= open("weights.txt","a")
+		f.write("[%f , %f ,%f, %f ,%f, %f, %f, %f]\n" %( weights[0] ,weights[1],weights[2], weights[3],weights[4] ,weights[5],weights[6], weights[7]))
+		f.close()
+	if(avg):
+		lines_cleared=0
+		for i in range(0,5):
+			while(True):
+				if(playgame_after_training()):
+					break;
+		print("AVG score %f" %(lines_cleared/5))   
+	if(play):
+		while(True):
+			if(playgame_after_training()):
+				break;
 	
-    lines_cleared=0
-    for i in range(0,5):
-        while(True):
-            if(playgame_after_training()):
-                break;
-    print("AVG score %f" %(lines_cleared/5))   
-	
-    exit(0)
+	exit(0)

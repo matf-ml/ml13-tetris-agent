@@ -3,7 +3,7 @@ local move = {} ;
 local inp = {};
 
 joypad.set(1, inp)
-emu.speedmode("turbo")
+--emu.speedmode("turbo")
 
 
 function connect(address, port, laddress, lport)
@@ -102,12 +102,12 @@ function main()
 	memoryRead()
     while(true) do
 		if(test_for_end()) then
-			emu.speedmode("turbo")
+		--	emu.speedmode("turbo")
 		 	frame_advance(240)
 			restart_game()	
 		else
 			if(memory.readbyte(68) == 7) then
-				emu.speedmode("normal")
+		--		emu.speedmode("normal")
 			end
 			passiveUpdate()
 			set_input(move,1)
