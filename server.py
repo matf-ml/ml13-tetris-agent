@@ -310,8 +310,8 @@ def semi_gradian_decent(board,board2):
 	rem = removed_lines(board2)
 	lines_cleared+=rem
 	one_step_reward=reward(old_params,new_params,rem)
-	if (new_params[2]>19):
-		new_params=[0,0,0,0,0,0,0,0]
+	#if (new_params[2]>19):
+	#	new_params=[0,0,0,0,0,0,0,0]
 	for i in range(0, len(weights)):
 		if(weights[i]>= 0):
 			sign = 1
